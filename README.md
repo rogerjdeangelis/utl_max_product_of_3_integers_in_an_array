@@ -3,6 +3,7 @@ Max product of 3 integers in an array. Keywords: sas sql join merge big data ana
     Max product of 3 integers in an array
 
       Same result in WPS and SAS
+      Addded Rick's IML soluton on the end
 
     github
     https://github.com/rogerjdeangelis/utl_max_product_of_3_integers_in_an_array
@@ -109,4 +110,40 @@ Max product of 3 integers in an array. Keywords: sas sql join merge big data ana
       maxMul=max(x1*x2*x3,x2*x3*x4,x1*x2*x4);
     run;submit;
     ');
+    
+    
+    
+        Rick Wicklin via listserv.uga.edu
+
+    Mar 9 (4 days ago)
+    to SAS-L
+    We can solve this problem more generally and more compactly. Suppose there are p variables and
+    you want the maximum product of k.  (Roger has hard-coded the case p=4 and k=3.)  You can use
+    the ALLCOMB function in SAS to generate all the combinations of p objects taken k at a time.
+    Use these as indices into the array of variables. Now take the maximum product of the possible combina
+    tions for each observation. In SAS/IML, this can be done as follows:
+
+    proc iml;
+    use have; read all var _num_ into X; close;
+    p = ncol(X);
+    k = 3;
+    c = allcomb(p, k);  /* combinations of p items taken k at a time */
+
+    maxMul = j(nrow(X), 1);
+    do i = 1 to nrow(X);
+       Y = X[i,];                   /* get i_th row */
+       M = shape(Y[c], nrow(c), k); /* all combinations of elements */
+       maxMul[i] = max( M[,#] );    /* max of product of rows */
+    end;
+
+    print maxMul;
+
+    Notice that by changing k=3 to k=2, you can compute the maximum pairwise product.
+    If the data set contains 6 variables instead of 4, the program works without modification.
+
+    For details of the ALLCOMB function, see
+    https://blogs.sas.com/content/iml/2013/09/30/generate-combinations-in-sas.html
+    The syntax M[,#] is called a "subscript reduction operator." See
+    https://blogs.sas.com/content/iml/2012/05/23/compute-statistics-for-each-row-by-using-subscript-operators.html
+
 
